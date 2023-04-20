@@ -716,7 +716,8 @@ class LQGTDataset_mat(data.Dataset):
         self.v_flagx = []
 
         self.npoint = 512
-
+        print("ooooo")
+        print(opt)
         self.paths_GT, self.sizes_GT = get_image_paths(self.data_type, opt['dataroot_GT'])
         self.paths_LQ, self.sizes_LQ = get_image_paths(self.data_type, opt['dataroot_LQ'])
         self.paths_event_h5 = opt['dataroot_event_H5']

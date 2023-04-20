@@ -29,7 +29,7 @@ def create_dataloader(dataset, dataset_opt, phase):
             dataset,
             batch_size=dataset_opt['batch_size'],
             shuffle=dataset_opt['use_shuffle'],
-            num_workers=dataset_opt['num_workers'],
+            num_workers=dataset_opt['n_workers'],
             pin_memory=True)
     elif phase == 'val':
         return torch.utils.data.DataLoader(
@@ -53,7 +53,7 @@ def create_dataset(dataset_opt, phase):
                     need_LR=(mode == 'LRHR')
                     )
     elif mode == 'LQGT_event':
-        from data.LQGT_dataset_mat import LQGTDataset_mat as D    
+        from data.LQGT_dataset_mat import LQGTDataset_mat as D  
         dataset = D(dataset_opt)
     else:
         raise NotImplementedError('Dataset [{:s}] is not recognized.'.format(mode))
