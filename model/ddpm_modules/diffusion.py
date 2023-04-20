@@ -276,7 +276,7 @@ class GaussianDiffusion(nn.Module):
         # )
 
     def p_losses(self, x_in, noise=None):
-        x_start = x_in['HR']
+        x_start = x_in['GT']
         [b, c, h, w] = x_start.shape
         t = torch.randint(0, self.num_timesteps, (b,),
                           device=x_start.device).long()
@@ -288,7 +288,7 @@ class GaussianDiffusion(nn.Module):
             x_recon = self.denoise_fn(x_noisy, t)
         else:
             x_recon = self.denoise_fn(
-                torch.cat([x_in['SR'], x_noisy], dim=1), t)
+                torch.cat([x_in['LQ'], x_noisy], dim=1), t)
         loss = self.loss_func(noise, x_recon)
 
         return loss
