@@ -705,7 +705,7 @@ class LQGTDataset_mat(data.Dataset):
     If only GT images are provided, generate LQ images on-the-fly.
     """
 
-    def __init__(self, opt):
+    def __init__(self, opt, phase):
         super(LQGTDataset_mat, self).__init__()
         self.opt = opt
         self.data_type = self.opt['data_type']
@@ -714,10 +714,10 @@ class LQGTDataset_mat(data.Dataset):
         self.LQ_env, self.GT_env = None, None  # environments for lmdb
         self.v_flag = []
         self.v_flagx = []
+        self.phase = phase
 
         self.npoint = 512
-        print("ooooo")
-        print(opt)
+
         self.paths_GT, self.sizes_GT = get_image_paths(self.data_type, opt['dataroot_GT'])
         self.paths_LQ, self.sizes_LQ = get_image_paths(self.data_type, opt['dataroot_LQ'])
         self.paths_event_h5 = opt['dataroot_event_H5']
@@ -792,7 +792,7 @@ class LQGTDataset_mat(data.Dataset):
         
         if img_GT.shape[2] == 1:
             img_GT = cv2.cvtColor(img_GT, cv2.COLOR_GRAY2BGR)
-        if self.opt['phase'] != 'train':  # modcrop in the validation / test phase
+        if self.phase != 'train':  # modcrop in the validation / test phase
             img_GT = modcrop(img_GT, scale)
         if self.opt['color']:  # change color space if necessary
             img_GT = channel_convert(img_GT.shape[2], self.opt['color'], [img_GT])[0]
@@ -811,7 +811,7 @@ class LQGTDataset_mat(data.Dataset):
             # print("img_LQ: ",img_LQ.shape)    
         else:  # down-sampling on-the-fly
             # randomly scale during training
-            if self.opt['phase'] == 'train':
+            if self.phase == 'train':
                 random_scale = random.choice(self.random_scale_list)
                 H_s, W_s, _ = img_GT.shape
 
@@ -832,7 +832,8 @@ class LQGTDataset_mat(data.Dataset):
             if img_LQ.ndim == 2:
                 img_LQ = np.expand_dims(img_LQ, axis=2)
 
-        if self.opt['phase'] == 'train':
+
+        if self.phase == 'train':
             # if the image size is too small
             H, W, _ = img_GT.shape
             if H < GT_size or W < GT_size:
@@ -860,6 +861,29 @@ class LQGTDataset_mat(data.Dataset):
             # augmentation - flip, rotate
             event_output_0, event_output_1 ,event_output_2, img_LQ, img_GT = augment([event_output_0, event_output_1 ,event_output_2, img_LQ, img_GT], self.opt['use_flip'],
                                           self.opt['use_rot'])
+        else:
+            # if the image size is too small
+            H, W, _ = img_GT.shape
+            if H < GT_size or W < GT_size:
+                img_GT = cv2.resize(img_GT, (GT_size, GT_size), interpolation=cv2.INTER_LINEAR)
+                # using matlab imresize
+                img_LQ = imresize_np(img_GT, 1 / scale, True)
+                if img_LQ.ndim == 2:
+                    img_LQ = np.expand_dims(img_LQ, axis=2)
+
+            H, W, C = img_LQ.shape
+            LQ_size = GT_size // scale
+            # randomly crop
+            rnd_h = random.randint(0, max(0, H - LQ_size))
+            rnd_w = random.randint(0, max(0, W - LQ_size))
+            
+            img_LQ = img_LQ[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :]           
+            event_output_0 = event_output_0[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :] 
+            event_output_1 = event_output_1[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :] 
+            event_output_2 = event_output_2[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :] 
+            rnd_h_GT, rnd_w_GT = int(rnd_h * scale), int(rnd_w * scale)
+            img_GT = img_GT[rnd_h_GT:rnd_h_GT + GT_size, rnd_w_GT:rnd_w_GT + GT_size, :]
+
 
         if self.opt['color']:  # change color space if necessary
             img_LQ = channel_convert(C, self.opt['color'],
@@ -880,17 +904,17 @@ class LQGTDataset_mat(data.Dataset):
         event_output = torch.cat((event_output, event_output_2), 0)
         input = torch.cat((img_LQ, event_output), 0)
 
-        print("img_LQ: ",img_LQ.shape) 
-        print("event_output: ",event_output.shape) 
-        print("img_GT: ",img_GT.shape) 
-        print("input: ",input.shape) 
+        # print("img_LQ: ",img_LQ.shape) 
+        # print("event_output: ",event_output.shape) 
+        # print("img_GT: ",img_GT.shape) 
+        # print("input: ",input.shape) 
 
 
         if LQ_path is None:
             LQ_path = GT_path
 
-        # return {'LQ': img_LQ, 'GT': img_GT,'Event':new_xyz, 'Event_feature': new_feature ,'Event_array':event_array,'Event_array_40':event_array_40, 'Event_path':event_path ,'LQ_path': LQ_path, 'GT_path': GT_path}
-        return {'LQ': img_LQ, 'GT': img_GT, 'input': input,'LQ_path': LQ_path, 'GT_path': GT_path}
+        # return {'LQ': img_LQ, 'GT': img_GT, 'input': input,'LQ_path': LQ_path, 'GT_path': GT_path}
+        return {'LQ': img_LQ, 'GT': img_GT, 'input': input}
 
     def __len__(self):
         return len(self.paths_GT)

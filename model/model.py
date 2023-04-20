@@ -61,20 +61,20 @@ class DDPM(BaseModel):
         self.netG.eval()
         with torch.no_grad():
             if isinstance(self.netG, nn.DataParallel):
-                self.SR = self.netG.module.super_resolution(
-                    self.data['SR'], continous)
+                self.rlt = self.netG.module.deblur(
+                    self.data['LQ'], continous)
             else:
-                self.SR = self.netG.super_resolution(
-                    self.data['SR'], continous)
+                self.rlt = self.netG.deblur(
+                    self.data['LQ'], continous)
         self.netG.train()
 
     def sample(self, batch_size=1, continous=False):
         self.netG.eval()
         with torch.no_grad():
             if isinstance(self.netG, nn.DataParallel):
-                self.SR = self.netG.module.sample(batch_size, continous)
+                self.rlt = self.netG.module.sample(batch_size, continous)
             else:
-                self.SR = self.netG.sample(batch_size, continous)
+                self.rlt = self.netG.sample(batch_size, continous)
         self.netG.train()
 
     def set_loss(self):
@@ -98,15 +98,16 @@ class DDPM(BaseModel):
     def get_current_visuals(self, need_LR=True, sample=False):
         out_dict = OrderedDict()
         if sample:
-            out_dict['SAM'] = self.SR.detach().float().cpu()
+            out_dict['SAM'] = self.rlt.detach().float().cpu()
         else:
-            out_dict['SR'] = self.SR.detach().float().cpu()
-            out_dict['INF'] = self.data['SR'].detach().float().cpu()
-            out_dict['HR'] = self.data['HR'].detach().float().cpu()
-            if need_LR and 'LR' in self.data:
-                out_dict['LR'] = self.data['LR'].detach().float().cpu()
-            else:
-                out_dict['LR'] = out_dict['INF']
+            out_dict['rlt'] = self.rlt.detach().float().cpu()
+            # out_dict['INF'] = self.data['SR'].detach().float().cpu()
+            out_dict['GT'] = self.data['GT'].detach().float().cpu()
+            out_dict['LQ'] = self.data['LQ'].detach().float().cpu()
+            # if need_LR and 'LR' in self.data:
+            #     out_dict['LR'] = self.data['LQ'].detach().float().cpu()
+            # else:
+            #     out_dict['LR'] = out_dict['INF']
         return out_dict
 
     def print_network(self):
