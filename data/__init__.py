@@ -55,6 +55,9 @@ def create_dataset(dataset_opt, phase):
     elif mode == 'LQGT_event':
         from data.LQGT_dataset_mat import LQGTDataset_mat as D  
         dataset = D(dataset_opt, phase)
+    elif mode == 'LQGT':
+        from data.LQGT_dataset import LQGTDataset as D  
+        dataset = D(dataset_opt, phase)    
     else:
         raise NotImplementedError('Dataset [{:s}] is not recognized.'.format(mode))
     logger = logging.getLogger('base')

@@ -700,42 +700,26 @@ def grouping(npoint, K, xyz, new_xyz, points):
 ###############################################################################
 ###############################################################################
 ###############################################################################
-class LQGTDataset_mat(data.Dataset):
+class LQGTDataset(data.Dataset):
     """
     Read LQ (Low Quality, e.g. LR (Low Resolution), blurry, etc) and GT image pairs.
     If only GT images are provided, generate LQ images on-the-fly.
     """
 
     def __init__(self, opt, phase):
-        super(LQGTDataset_mat, self).__init__()
+        super(LQGTDataset, self).__init__()
         self.opt = opt
         self.data_type = self.opt['data_type']
         self.paths_LQ, self.paths_GT = None, None
         self.sizes_LQ, self.sizes_GT = None, None
         self.LQ_env, self.GT_env = None, None  # environments for lmdb
-        self.v_flag = []
-        self.v_flagx = []
         self.phase = phase
 
         self.npoint = 512
 
         self.paths_GT, self.sizes_GT = get_image_paths(self.data_type, opt['dataroot_GT'])
         self.paths_LQ, self.sizes_LQ = get_image_paths(self.data_type, opt['dataroot_LQ'])
-        self.paths_event_h5 = opt['dataroot_event_H5']
-        # self.paths_event_h5_40 = opt['dataroot_event_H5_40']
 
-        for i in range(0,len(self.paths_LQ)-1):
-            path_i = self.paths_LQ[i]
-            path_i_n = self.paths_LQ[i+1]
-            video_name_i = path_i.split('/')[len(path_i.split('/'))-1].split('_')[0]
-            video_name_i_n = path_i_n.split('/')[len(path_i_n.split('/'))-1].split('_')[0]
-            if video_name_i != video_name_i_n:
-                self.v_flag.append(i)
-        self.v_flagx = [x + 1 for x in self.v_flag]
-        self.v_flagx.append(0)
-        self.v_flag.append(len(self.paths_LQ)-1)
-        # print(self.v_flag)
-        # print(self.v_flagx)
         assert self.paths_GT, 'Error: GT path is empty.'
         if self.paths_LQ and self.paths_GT:
             assert len(self.paths_LQ) == len(
@@ -750,8 +734,6 @@ class LQGTDataset_mat(data.Dataset):
                                 meminit=False)
         self.LQ_env = lmdb.open(self.opt['dataroot_LQ'], readonly=True, lock=False, readahead=False,
                                 meminit=False)
-        self.event_env = lmdb.open(self.opt['dataroot_LQ'], readonly=True, lock=False, readahead=False,
-                                meminit=False)
 
     def __getitem__(self, index):
         if self.data_type == 'lmdb' and (self.GT_env is None or self.LQ_env is None):
@@ -759,25 +741,6 @@ class LQGTDataset_mat(data.Dataset):
         GT_path, LQ_path = None, None
         scale = self.opt['scale']
         GT_size = self.opt['GT_size']
-
-
-        event_h5f = h5py.File(self.paths_event_h5,'r')
-        event_output_1 = np.array(event_h5f[str(index)])    
-       
-
-        if index in self.v_flagx:
-            event_output_0 = np.array(event_h5f[str(index)])  
-        else:
-            event_output_0 = np.array(event_h5f[str(index-1)])   
-        
-        if index in self.v_flag:
-            event_output_2 = np.array(event_h5f[str(index)])  
-        else:
-            event_output_2 = np.array(event_h5f[str(index+1)])        
-
-        event_output_0 = event_output_0.transpose((1,2,0))
-        event_output_1 = event_output_1.transpose((1,2,0))
-        event_output_2 = event_output_2.transpose((1,2,0))
 
 
         # get GT image
@@ -852,15 +815,12 @@ class LQGTDataset_mat(data.Dataset):
             
 
             img_LQ = img_LQ[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :]           
-            event_output_0 = event_output_0[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :] 
-            event_output_1 = event_output_1[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :] 
-            event_output_2 = event_output_2[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :] 
             rnd_h_GT, rnd_w_GT = int(rnd_h * scale), int(rnd_w * scale)
             img_GT = img_GT[rnd_h_GT:rnd_h_GT + GT_size, rnd_w_GT:rnd_w_GT + GT_size, :]
 
 
             # augmentation - flip, rotate
-            event_output_0, event_output_1 ,event_output_2, img_LQ, img_GT = augment([event_output_0, event_output_1 ,event_output_2, img_LQ, img_GT], self.opt['use_flip'],
+            img_LQ, img_GT = augment([img_LQ, img_GT], self.opt['use_flip'],
                                           self.opt['use_rot'])
         else:
             # if the image size is too small
@@ -879,9 +839,6 @@ class LQGTDataset_mat(data.Dataset):
             rnd_w = random.randint(0, max(0, W - LQ_size))
             
             img_LQ = img_LQ[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :]           
-            event_output_0 = event_output_0[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :] 
-            event_output_1 = event_output_1[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :] 
-            event_output_2 = event_output_2[rnd_h:rnd_h + LQ_size, rnd_w:rnd_w + LQ_size, :] 
             rnd_h_GT, rnd_w_GT = int(rnd_h * scale), int(rnd_w * scale)
             img_GT = img_GT[rnd_h_GT:rnd_h_GT + GT_size, rnd_w_GT:rnd_w_GT + GT_size, :]
 
@@ -897,14 +854,6 @@ class LQGTDataset_mat(data.Dataset):
         img_GT = torch.from_numpy(np.ascontiguousarray(np.transpose(img_GT, (2, 0, 1)))).float()
         img_LQ = torch.from_numpy(np.ascontiguousarray(np.transpose(img_LQ, (2, 0, 1)))).float()
 
-        event_output_0 = torch.from_numpy(np.ascontiguousarray(np.transpose(event_output_0, (2, 0, 1)))).float()
-        event_output_1 = torch.from_numpy(np.ascontiguousarray(np.transpose(event_output_1, (2, 0, 1)))).float()
-        event_output_2 = torch.from_numpy(np.ascontiguousarray(np.transpose(event_output_2, (2, 0, 1)))).float()
-
-        event_output = torch.cat((event_output_0, event_output_1), 0)
-        event_output = torch.cat((event_output, event_output_2), 0)
-        input = torch.cat((img_LQ, event_output), 0)
-
         # print("img_LQ: ",img_LQ.shape) 
         # print("event_output: ",event_output.shape) 
         # print("img_GT: ",img_GT.shape) 
@@ -915,7 +864,7 @@ class LQGTDataset_mat(data.Dataset):
             LQ_path = GT_path
 
         # return {'LQ': img_LQ, 'GT': img_GT, 'input': input,'LQ_path': LQ_path, 'GT_path': GT_path}
-        return {'LQ': img_LQ, 'GT': img_GT, 'input': input}
+        return {'LQ': img_LQ, 'GT': img_GT}
 
     def __len__(self):
         return len(self.paths_GT)

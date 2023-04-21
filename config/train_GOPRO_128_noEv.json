@@ -1,8 +1,8 @@
 {
-    "name": "gopro_128",
+    "name": "gopro_128_noEv",
     "phase": "train", // train or val
     "gpu_ids": [
-        0
+        0,1
     ],
     "path": { //set the path
         "log": "logs",
@@ -15,14 +15,13 @@
     "datasets": {
         "train": {
             "name": "GOPRO",
-            "mode": "LQGT_event", // whether need LR img
+            "mode": "LQGT", // whether need LR img
             "data_type": "img", //lmdb or img, path of img files
             "dataroot_GT": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/train/sharp",
             "dataroot_LQ": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/train/blur",
-            "dataroot_event_H5": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/train/H5/train_blur.h5",
             "use_shuffle": true,
             "n_workers": 0,  // per GPU
-            "batch_size": 2,
+            "batch_size": 24,
             "GT_size": 128,
             "use_flip": true,
             "use_rot": true,
@@ -31,11 +30,10 @@
         },
         "val": {
             "name": "GOPRO_valid",
-            "mode": "LQGT_event",
+            "mode": "LQGT",
             "data_type": "img", //lmdb or img, path of img files
-            "dataroot_GT": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/test/sharp",
-            "dataroot_LQ": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/test/blur",
-            "dataroot_event_H5": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/test/H5/test_blur.h5",
+            "dataroot_GT": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/test_noEv/sharp",
+            "dataroot_LQ": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/test_noEv/blur",
             "GT_size": 128,
             "scale": 1
         }
@@ -81,7 +79,7 @@
         }
     },
     "train": {
-        "n_iter": 1000000,
+        "n_iter": 500000,
         "val_freq": 5e4,
         "save_checkpoint_freq": 5e4,
         "print_freq": 500,
@@ -100,6 +98,6 @@
         }
     },
     "wandb": {
-        "project": "gopro_128"
+        "project": "gopro_128_noEv"
     }
 }
