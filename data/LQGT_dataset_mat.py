@@ -915,7 +915,7 @@ class LQGTDataset_mat(data.Dataset):
             LQ_path = GT_path
 
         # return {'LQ': img_LQ, 'GT': img_GT, 'input': input,'LQ_path': LQ_path, 'GT_path': GT_path}
-        return {'LQ': img_LQ, 'GT': img_GT, 'input': input}
+        return {'LQ': img_LQ, 'GT': img_GT, 'event': event_output}
 
     def __len__(self):
         return len(self.paths_GT)

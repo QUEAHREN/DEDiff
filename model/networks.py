@@ -44,17 +44,18 @@ def weights_init_kaiming(m, scale=1):
 
 def weights_init_orthogonal(m):
     classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
-        init.orthogonal_(m.weight.data, gain=1)
-        if m.bias is not None:
-            m.bias.data.zero_()
-    elif classname.find('Linear') != -1:
-        init.orthogonal_(m.weight.data, gain=1)
-        if m.bias is not None:
-            m.bias.data.zero_()
-    elif classname.find('BatchNorm2d') != -1:
-        init.constant_(m.weight.data, 1.0)
-        init.constant_(m.bias.data, 0.0)
+    if classname.find('BasicConv') == -1:
+        if classname.find('Conv') != -1:
+            init.orthogonal_(m.weight.data, gain=1)
+            if m.bias is not None:
+                m.bias.data.zero_()
+        elif classname.find('Linear') != -1:
+            init.orthogonal_(m.weight.data, gain=1)
+            if m.bias is not None:
+                m.bias.data.zero_()
+        elif classname.find('BatchNorm2d') != -1:
+            init.constant_(m.weight.data, 1.0)
+            init.constant_(m.bias.data, 0.0)
 
 
 def init_weights(net, init_type='kaiming', scale=1, std=0.02):
@@ -86,6 +87,8 @@ def define_G(opt):
         from .ddpm_modules import diffusion, unet
     elif model_opt['which_model_G'] == 'sr3':
         from .sr3_modules import diffusion, unet
+    elif model_opt['which_model_G'] == 'dediff':
+        from .dediff_modules import diffusion, unet    
     if ('norm_groups' not in model_opt['unet']) or model_opt['unet']['norm_groups'] is None:
         model_opt['unet']['norm_groups']=32
     model = unet.UNet(

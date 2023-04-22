@@ -143,10 +143,12 @@ class SFB1(nn.Module):
         x = torch.cat([x1, x2], dim=1)
         x = self.x_feature_extract[0](x)
         event_feature = self.event_feature_extract[0](event)
-
+        print("0", x.shape)
+        print("1", event_feature.shape)
         x_2 = F.interpolate(x,scale_factor=0.25)
         event_feature = F.interpolate(event_feature,scale_factor=0.25)
-
+        print("2", x_2.shape)
+        print("3", event_feature.shape)
         x_2 = self.x_feature_extract[1](x_2)
         event_feature = self.event_feature_extract[1](event_feature)
 
@@ -391,7 +393,7 @@ class STRA(nn.Module):
         x = x[:,range(0,3),:,:]
 
         event = self.tmb(event)
-
+        print(event.shape)
         x_ = self.feat_extract[0](x)
         res1 = self.Encoder[0](x_)
 
@@ -403,7 +405,7 @@ class STRA(nn.Module):
 
 
         z21 = F.interpolate(res2, scale_factor=2)
-
+        print(z.shape)
         if output_last_feature is not None:
             res1,event_feature = self.sfb2[0](res1,z21,event,output_last_feature)
         else:
@@ -428,7 +430,7 @@ class STRA(nn.Module):
 from torchstat import stat
 model = STRA(num_res=2)
 
-stat(model, (9,40,40))
+# stat(model, (9,40,40))
 
-input_img = torch.zeros(4,9,40,40)
+input_img = torch.zeros(4,9,128,128)
 output_img,_ = model(input_img)

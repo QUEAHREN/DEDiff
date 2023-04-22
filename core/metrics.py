@@ -12,8 +12,8 @@ def tensor2img(tensor, out_type=np.uint8, min_max=(-1, 1)):
     Output: 3D(H,W,C) or 2D(H,W), [0,255], np.uint8 (default)
     '''
     tensor = tensor.squeeze().float().cpu().clamp_(*min_max)  # clamp
-    tensor = (tensor - min_max[0]) / \
-        (min_max[1] - min_max[0])  # to range [0,1]
+    # tensor = (tensor - min_max[0]) / \
+    #     (min_max[1] - min_max[0])  # to range [0,1]
     n_dim = tensor.dim()
     if n_dim == 4:
         n_img = len(tensor)

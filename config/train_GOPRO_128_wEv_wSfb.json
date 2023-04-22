@@ -1,8 +1,8 @@
 {
-    "name": "gopro_128_noEv",
+    "name": "gopro_128_wEv_wSfb",
     "phase": "train", // train or val
     "gpu_ids": [
-        0,1
+        0
     ],
     "path": { //set the path
         "log": "logs",
@@ -15,13 +15,14 @@
     "datasets": {
         "train": {
             "name": "GOPRO",
-            "mode": "LQGT", // whether need LR img
+            "mode": "LQGT_event", // whether need LR img
             "data_type": "img", //lmdb or img, path of img files
             "dataroot_GT": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/train/sharp",
             "dataroot_LQ": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/train/blur",
+            "dataroot_event_H5": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/train/H5/train_blur.h5",
             "use_shuffle": true,
             "n_workers": 0,  // per GPU
-            "batch_size": 32,
+            "batch_size": 2,
             "GT_size": 128,
             "use_flip": true,
             "use_rot": true,
@@ -30,16 +31,17 @@
         },
         "val": {
             "name": "GOPRO_valid",
-            "mode": "LQGT",
+            "mode": "LQGT_event",
             "data_type": "img", //lmdb or img, path of img files
-            "dataroot_GT": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/test_noEv/sharp",
-            "dataroot_LQ": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/test_noEv/blur",
+            "dataroot_GT": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/test/sharp",
+            "dataroot_LQ": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/test/blur",
+            "dataroot_event_H5": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/test/H5/test_blur.h5",
             "GT_size": 128,
             "scale": 1
         }
     },
     "model": {
-        "which_model_G": "sr3", // use the ddpm or sr3 network structure
+        "which_model_G": "dediff", // use the ddpm or sr3 network structure
         "finetune_norm": false,
         "unet": {
             "in_channel": 6,
@@ -79,14 +81,14 @@
         }
     },
     "train": {
-        "n_iter": 500000,
-        "val_freq": 5e4,
-        "save_checkpoint_freq": 5e4,
-        "print_freq": 500,
         // "n_iter": 1000000,
-        // "val_freq": 10,
-        // "save_checkpoint_freq": 1e4,
-        // "print_freq": 10,
+        // "val_freq": 5e4,
+        // "save_checkpoint_freq": 5e4,
+        // "print_freq": 500,
+        "n_iter": 1000000,
+        "val_freq": 10,
+        "save_checkpoint_freq": 1e4,
+        "print_freq": 10,
         "optimizer": {
             "type": "adam",
             "lr": 1e-4
@@ -98,6 +100,6 @@
         }
     },
     "wandb": {
-        "project": "gopro_128_noEv"
+        "project": "gopro_128_wEv_wSfb"
     }
 }

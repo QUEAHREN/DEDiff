@@ -62,10 +62,10 @@ class DDPM(BaseModel):
         with torch.no_grad():
             if isinstance(self.netG, nn.DataParallel):
                 self.rlt = self.netG.module.deblur(
-                    self.data['LQ'], continous)
+                    self.data, continous)
             else:
                 self.rlt = self.netG.deblur(
-                    self.data['LQ'], continous)
+                    self.data, continous)
         self.netG.train()
 
     def sample(self, batch_size=1, continous=False):
