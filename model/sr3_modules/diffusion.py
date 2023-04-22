@@ -207,6 +207,7 @@ class GaussianDiffusion(nn.Module):
 
     @torch.no_grad()
     def deblur(self, x_in, continous=False):
+        x_in = x_in['LQ']
         return self.p_sample_loop(x_in, continous)
 
     def q_sample(self, x_start, continuous_sqrt_alpha_cumprod, noise=None):

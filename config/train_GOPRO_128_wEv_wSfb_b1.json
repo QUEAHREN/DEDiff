@@ -1,8 +1,8 @@
 {
-    "name": "gopro_128_wEv_wSfb",
+    "name": "gopro_128_wEv_wSfb_b1",
     "phase": "train", // train or val
     "gpu_ids": [
-        0,1
+        0
     ],
     "path": { //set the path
         "log": "logs",
@@ -22,7 +22,7 @@
             "dataroot_event_H5": "/gdata/linrj/Event_Deblur/GOPRO/GOPRO_total/train/H5/train_blur.h5",
             "use_shuffle": true,
             "n_workers": 0,  // per GPU
-            "batch_size": 2,
+            "batch_size": 1,
             "GT_size": 128,
             "use_flip": true,
             "use_rot": true,
@@ -100,6 +100,6 @@
         }
     },
     "wandb": {
-        "project": "gopro_128_wEv_wSfb"
+        "project": "gopro_128_wEv_wSfb_b1"
     }
 }
