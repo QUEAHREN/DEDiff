@@ -727,8 +727,10 @@ class LQGTDataset_mat(data.Dataset):
         for i in range(0,len(self.paths_LQ)-1):
             path_i = self.paths_LQ[i]
             path_i_n = self.paths_LQ[i+1]
-            video_name_i = path_i.split('/')[len(path_i.split('/'))-1].split('_')[0]
-            video_name_i_n = path_i_n.split('/')[len(path_i_n.split('/'))-1].split('_')[0]
+            video_name_list_i = path_i.split('/')[len(path_i.split('/'))-1].split('_')
+            video_name_list_i_n = path_i_n.split('/')[len(path_i_n.split('/'))-1].split('_')
+            video_name_i = video_name_list_i[0] + video_name_list_i[1] + video_name_list_i[2]
+            video_name_i_n = video_name_list_i_n[0] + video_name_list_i_n[1] + video_name_list_i_n[2]
             if video_name_i != video_name_i_n:
                 self.v_flag.append(i)
         self.v_flagx = [x + 1 for x in self.v_flag]
