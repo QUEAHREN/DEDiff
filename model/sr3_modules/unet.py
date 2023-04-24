@@ -170,7 +170,8 @@ class UNet(nn.Module):
         res_blocks=3,
         dropout=0,
         with_noise_level_emb=True,
-        image_size=128
+        image_size=128,
+        **kwargs
     ):
         super().__init__()
 

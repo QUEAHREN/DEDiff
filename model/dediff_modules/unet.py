@@ -161,7 +161,7 @@ class ResnetBlocWithAttn(nn.Module):
 
 class BasicConv(nn.Module):
     def __init__(self, in_channel, out_channel, kernel_size, stride, bias=True, norm=False, relu=True, transpose=False):
-        super().__init__()
+        super(BasicConv, self).__init__()
         if bias and norm:
             bias = False
 
@@ -309,11 +309,12 @@ class SFB(nn.Module):
         self.INF = INF
 
     def forward(self, x, event):
-
+        _, _, w1, h1 = event.size()
+        _, _, w2, h2 = x.size()
         x = self.x_feature_extract[0](x)
         event_feature = self.event_feature_extract[0](event)
         x_2 = x
-        event_feature = F.interpolate(event_feature, scale_factor=0.0625)
+        event_feature = F.interpolate(event_feature, scale_factor=h2/h1)
         x_2 = self.x_feature_extract[1](x_2)
         event_feature = self.event_feature_extract[1](event_feature)
 
@@ -351,9 +352,11 @@ class UNet(nn.Module):
             res_blocks=3,
             dropout=0,
             with_noise_level_emb=True,
-            image_size=128
+            image_size=128,
+            use_ef=False
     ):
         super().__init__()
+        self.use_ef = use_ef
 
         if with_noise_level_emb:
             noise_level_channel = inner_channel
@@ -389,7 +392,14 @@ class UNet(nn.Module):
                 now_res = now_res // 2
         self.downs = nn.ModuleList(downs)
 
-        self.tmb = TMB(pre_channel)
+        if self.use_ef:
+            self.tmb = TMB(pre_channel // 8)
+            self.event_feature_extract = nn.Sequential(  # 提取事件特征
+                BasicConv(pre_channel // 8, pre_channel, kernel_size=1, stride=1, relu=True),
+            )
+        else:
+            self.tmb = TMB(pre_channel)
+
         self.sfb = SFB(pre_channel, pre_channel, thita=1e-3)
         self.mid = nn.ModuleList([
             ResnetBlocWithAttn(pre_channel, pre_channel, noise_level_emb_dim=noise_level_channel,
@@ -425,8 +435,10 @@ class UNet(nn.Module):
 
         event = x[:, range(6, 12), :, :]
         x = x[:, range(0, 6), :, :]
+        
         event = self.tmb(event)
-
+        if self.use_ef:
+            event = self.event_feature_extract(event)
         feats = []
         for layer in self.downs:
             if isinstance(layer, ResnetBlocWithAttn):
@@ -459,8 +471,8 @@ if __name__ == '__main__':
         in_channel=6,
         out_channel=3,
         inner_channel=32,
-        channel_mults=[1, 2, 4, 8, 8],
-        attn_res=[16],
+        channel_mults=[1, 2, 4, 8],
+        attn_res=[8],
         res_blocks=2,
         dropout=0.2,
         image_size=128
