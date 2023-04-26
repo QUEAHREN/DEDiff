@@ -88,7 +88,9 @@ def define_G(opt):
     elif model_opt['which_model_G'] == 'sr3':
         from .sr3_modules import diffusion, unet
     elif model_opt['which_model_G'] == 'dediff':
-        from .dediff_modules import diffusion, unet    
+        from .dediff_modules import diffusion, unet
+    elif model_opt['which_model_G'] == 'dediff1':
+        from .dediff1_modules import diffusion, unet     
     if ('norm_groups' not in model_opt['unet']) or model_opt['unet']['norm_groups'] is None:
         model_opt['unet']['norm_groups']=32
     model = unet.UNet(
@@ -101,6 +103,7 @@ def define_G(opt):
         res_blocks=model_opt['unet']['res_blocks'],
         dropout=model_opt['unet']['dropout'],
         image_size=model_opt['diffusion']['image_size'],
+        # image_size=64,
         use_ef=model_opt['unet']['use_ef']
     )
     netG = diffusion.GaussianDiffusion(
